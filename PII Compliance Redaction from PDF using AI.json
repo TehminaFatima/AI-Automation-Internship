@@ -45,7 +45,7 @@
         528,
         688
       ],
-      "webhookId": "45a0d015-d831-4d97-b34c-0b78c453ef34"
+      "webhookId": "REPLACE_WITH_YOUR_WEBHOOK_ID"
     },
     {
       "parameters": {
@@ -94,8 +94,8 @@
       ],
       "credentials": {
         "openAiApi": {
-          "id": "NH92wlXyBy10fPku",
-          "name": "n8n free OpenAI API credits"
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
+          "name": "OpenAI account"
         }
       }
     },
@@ -126,7 +126,7 @@
       "name": "Convert HTML to PDF",
       "credentials": {
         "htmlcsstopdfApi": {
-          "id": "wrSJ07FpnU2Mjg6P",
+          "id": "REPLACE_WITH_YOUR_CREDENTIAL_ID",
           "name": "HTML to PDF account"
         }
       }
@@ -146,97 +146,10 @@
       ],
       "id": "4cf520d0-0a1a-4244-94ac-b8e179356fe0",
       "name": "Form",
-      "webhookId": "10e1e203-5f06-42d0-b738-64f08e2168ad"
+      "webhookId": "REPLACE_WITH_YOUR_WEBHOOK_ID"
     }
   ],
-  "pinData": {
-    "Detect PII (AI)1": [
-      {
-        "json": {
-          "index": 0,
-          "message": {
-            "role": "assistant",
-            "content": {
-              "redactions": [
-                {
-                  "value": "John A. Smith",
-                  "type": "full name"
-                },
-                {
-                  "value": "03/14/1985",
-                  "type": "date of birth"
-                },
-                {
-                  "value": "482 Maple Street, Springfield, IL 62704",
-                  "type": "home address"
-                },
-                {
-                  "value": "(555) 234-9981",
-                  "type": "phone number"
-                },
-                {
-                  "value": "john.smith@example.com",
-                  "type": "email address"
-                },
-                {
-                  "value": "123-45-6789",
-                  "type": "social security number"
-                },
-                {
-                  "value": "000123456789",
-                  "type": "bank account number"
-                },
-                {
-                  "value": "4111 1111 1111 1111",
-                  "type": "credit card number"
-                },
-                {
-                  "value": "Mary Smith",
-                  "type": "emergency contact name"
-                },
-                {
-                  "value": "(555) 876-1234",
-                  "type": "emergency contact phone number"
-                },
-                {
-                  "value": "mary.smith@example.com",
-                  "type": "emergency contact email address"
-                },
-                {
-                  "value": "John A. Smith",
-                  "type": "signature"
-                },
-                {
-                  "value": "08/07/2026",
-                  "type": "signature date"
-                }
-              ]
-            },
-            "refusal": null,
-            "annotations": []
-          },
-          "finish_reason": "stop"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Convert HTML to PDF": [
-      {
-        "json": {
-          "file_deletion_date": "2026-09-06",
-          "file_size_bytes": 11791,
-          "pdf_url": "https://generated-image.s3.ap-south-1.amazonaws.com/pdfs/070826/ef5e0f35-68d5-4d3e-9375-d9f0cedc9086.pdf",
-          "source_type": "html",
-          "success": true
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
+  "pinData": {},
   "connections": {
     "On Form Submission1": {
       "main": [
@@ -309,13 +222,5 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
-  },
-  "versionId": "f07516e3-15da-4344-9c1f-09bf997f1a90",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "650cb909b3f4fca54a2460d3e676526842c4d547ef247962acf3899083b302b8"
-  },
-  "nodeGroups": [],
-  "id": "h7VfkcoaPP62Omva",
-  "tags": []
+  }
 }
