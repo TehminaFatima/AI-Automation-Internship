@@ -1,0 +1,234 @@
+{
+  "name": "PII Compliance Redaction from PDF using AI",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Convert redacted text into HTML that preserves line breaks & paragraphs\nconst text = items[0].json.redactedText || '';\n\nconst escape = (s) => s\n  .replace(/&/g, '&amp;')\n  .replace(/</g, '&lt;')\n  .replace(/>/g, '&gt;');\n\n// Split into paragraphs on blank lines, preserve single line breaks within a paragraph\nconst paragraphs = text\n  .split(/\\n\\s*\\n/)\n  .map(p => escape(p.trim()).replace(/\\n/g, '<br>'))\n  .filter(p => p.length > 0);\n\nconst bodyHtml = paragraphs.map(p => `<p style=\"margin: 0 0 12px 0;\">${p}</p>`).join('\\n');\n\nconst html = `<html>\n<head>\n<style>\n  body {\n    font-family: Arial, Helvetica, sans-serif;\n    font-size: 11pt;\n    line-height: 1.5;\n    padding: 40px;\n    white-space: pre-wrap;\n    word-wrap: break-word;\n  }\n  p { margin: 0 0 12px 0; }\n</style>\n</head>\n<body>\n${bodyHtml}\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    ...items[0].json,\n    html\n  }\n}];"
+      },
+      "id": "f19a1f13-0817-4049-800d-e5bf41f97360",
+      "name": "Build HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload PDF for PII Redaction",
+        "formDescription": "Upload a PDF and receive back a redacted copy with PII removed.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "PDF Document",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "respondWithOptions": {
+            "values": {
+              "respondWith": "redirect"
+            }
+          }
+        }
+      },
+      "id": "0616ea83-963d-4184-af7a-a580a2d385b3",
+      "name": "On Form Submission1",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        688
+      ],
+      "webhookId": "45a0d015-d831-4d97-b34c-0b78c453ef34"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "PDF_Document",
+        "options": {}
+      },
+      "id": "a321a710-05d3-4706-8204-cc47fd7cf258",
+      "name": "Extract Text From PDF1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        752,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a PII detection engine. You will be given raw text extracted from a PDF. Identify every instance of personally identifiable information (PII), including but not limited to: full names, home/mailing addresses, phone numbers, email addresses, social security / national ID numbers, bank account or credit card numbers, dates of birth, and signatures.\n\nReturn ONLY valid JSON (no markdown, no commentary) in this exact shape:\n{\n  \"redactions\": [\n    { \"value\": \"<exact text found in the document>\", \"type\": \"<PII category>\" }\n  ]\n}\n\nIf no PII is found, return { \"redactions\": [] }. Use the exact substring as it appears in the source text so it can be found and replaced.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.text }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "id": "a0c9b260-dc0b-4e9a-8f27-5d693e2b6fe8",
+      "name": "Detect PII (AI)1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.5,
+      "position": [
+        976,
+        688
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "NH92wlXyBy10fPku",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the AI's JSON output and redact each PII value from the original text.\nconst aiOutput = items[0].json.message?.content || items[0].json.text || items[0].json.output;\nlet parsed;\ntry {\n  parsed = typeof aiOutput === 'string' ? JSON.parse(aiOutput) : aiOutput;\n} catch (e) {\n  parsed = { redactions: [] };\n}\n\nconst originalText = $('Extract Text From PDF1').item.json.text;\nlet redactedText = originalText;\nconst log = [];\n\nfor (const item of (parsed.redactions || [])) {\n  if (!item.value) continue;\n  const escaped = item.value.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n  const regex = new RegExp(escaped, 'g');\n  const before = redactedText;\n  redactedText = redactedText.replace(regex, `[REDACTED:${item.type || 'PII'}]`);\n  if (before !== redactedText) {\n    log.push({ value: item.value, type: item.type });\n  }\n}\n\nreturn [{\n  json: {\n    redactedText,\n    originalText,\n    redactionCount: log.length,\n    redactionLog: log\n  }\n}];"
+      },
+      "id": "d5ebf526-c1c9-4826-a56b-5af8ef9ffb79",
+      "name": "Apply Redactions1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "html_content": "={{ $json.html }}"
+      },
+      "type": "n8n-nodes-htmlcsstopdf.htmlcsstopdf",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        688
+      ],
+      "id": "6e87aa84-abb0-4ffa-86f0-f05e4040a39a",
+      "name": "Convert HTML to PDF",
+      "credentials": {
+        "htmlcsstopdfApi": {
+          "id": "wrSJ07FpnU2Mjg6P",
+          "name": "HTML to PDF account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "your updated pdf",
+        "completionMessage": "={{ $json.pdf_url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        2000,
+        688
+      ],
+      "id": "4cf520d0-0a1a-4244-94ac-b8e179356fe0",
+      "name": "Form",
+      "webhookId": "10e1e203-5f06-42d0-b738-64f08e2168ad"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On Form Submission1": {
+      "main": [
+        [
+          {
+            "node": "Extract Text From PDF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text From PDF1": {
+      "main": [
+        [
+          {
+            "node": "Detect PII (AI)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect PII (AI)1": {
+      "main": [
+        [
+          {
+            "node": "Apply Redactions1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Redactions1": {
+      "main": [
+        [
+          {
+            "node": "Build HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f07516e3-15da-4344-9c1f-09bf997f1a90",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "650cb909b3f4fca54a2460d3e676526842c4d547ef247962acf3899083b302b8"
+  },
+  "nodeGroups": [],
+  "id": "h7VfkcoaPP62Omva",
+  "tags": []
+}

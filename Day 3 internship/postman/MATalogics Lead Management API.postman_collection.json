@@ -1,0 +1,155 @@
+{
+	"info": {
+		"_postman_id": "060f6402-3279-4b3c-b22b-0c795997587f",
+		"name": "MATalogics Lead Management API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43585600",
+		"_collection_link": "https://tehmina-4103378.postman.co/workspace/MATalogics-Internship-Collectio~094e2710-3612-4ba0-8654-e6ff8557b2e7/collection/43585600-060f6402-3279-4b3c-b22b-0c795997587f?action=share&source=collection_link&creator=43585600"
+	},
+	"item": [
+		{
+			"name": "New Request",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"name\": \"tehmina fatima\", \"email\": \"tehminafatimaofficial@gmail.com\", \"phone\": \"+923302686289\", \"company\": \"MATalogics\", \"interest\": \"AI Automation\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/create-lead",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"create-lead"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/get-leads",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"get-leads"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " {\"name\":\"tehmina\",\"email\": \"tehminafatimaofficial@gmail.com\", \"phone\": \"+923111111111\", \"company\": \"MATalogics Pvt Ltd\", \"interest\": \"AI Agents\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/update-lead",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"update-lead"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " {\"name\":\"tehmina\",\"email\": \"tehminafatimaofficial@gmail.com\", \"phone\": \"+923111111111\", \"company\": \"MATalogics Pvt Ltd\", \"interest\": \"AI Agents\"}"
+				},
+				"url": {
+					"raw": "{{base_url}}/delete-lead",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"delete-lead"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": ""
+		}
+	]
+}

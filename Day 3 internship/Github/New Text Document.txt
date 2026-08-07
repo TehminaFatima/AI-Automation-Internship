@@ -1,0 +1,1 @@
+https://github.com/enescingoz/awesome-n8n-templates/tree/main/PDF_and_Document_Processing
