@@ -1,0 +1,308 @@
+{
+  "name": "Task Creation - Notion to Slack",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "databaseId": {
+          "__rl": true,
+          "value": "3b9a64ef-4b75-800a-bad2-e2269651bc38",
+          "mode": "list",
+          "cachedResultName": "Client’s onboarding",
+          "cachedResultUrl": "https://app.notion.com/p/3b9a64ef4b75800abad2e2269651bc38"
+        }
+      },
+      "id": "5a42aa0f-4cbd-49fc-aff5-0a7f28c75ec4",
+      "name": "Notion Trigger - New Client",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        112
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "d78x301WJS1cgMVe",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "channel",
+        "channelId": "={{ $json.channelName }}"
+      },
+      "id": "86f63e78-a8fb-4041-bd14-9baeb7004118",
+      "name": "Create Slack Channel",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        112
+      ],
+      "webhookId": "f4d7755a-5966-424a-9f6b-6013aaa579a4",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "im5tcWNWqRncInkU",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "text": "=🎉 *New Client Onboarded!*\n*Client:* {{ $('Set Client Fields').item.json.clientName }}\n*Notion Page:* {{ $('Set Client Fields').item.json.clientUrl }}\n\nThis channel has been created for all communication related to this client. Welcome aboard!",
+        "otherOptions": {}
+      },
+      "id": "da620003-513c-401f-9ba4-eb00c3855376",
+      "name": "Notify Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        112
+      ],
+      "webhookId": "87afea60-f0ed-4dcb-b901-035a2b8e55eb",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "im5tcWNWqRncInkU",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "databaseId": {
+          "__rl": true,
+          "value": "3b9a64ef-4b75-80d8-bda3-ef00be1b2e06",
+          "mode": "list",
+          "cachedResultName": "task of the week",
+          "cachedResultUrl": "https://app.notion.com/p/3b9a64ef4b7580d8bda3ef00be1b2e06"
+        }
+      },
+      "id": "d5618c4b-6e44-46d0-8d93-473a76a6ee54",
+      "name": "Notion Trigger",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -112
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "d78x301WJS1cgMVe",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1b2c3d4-0002-4000-8000-000000000002",
+              "name": "taskName",
+              "value": "={{ $json.title }} has this {{ $json.priority }} priority",
+              "type": "string"
+            },
+            {
+              "id": "b1b2c3d4-0004-4000-8000-000000000004",
+              "name": "assignee",
+              "value": "={{ $json.Assignee }}",
+              "type": "string"
+            },
+            {
+              "id": "5e1466a6-998b-4c17-9809-2f7052e75ac9",
+              "name": "due date",
+              "value": "={{ $json['Due Date'] }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fa738fc9-3164-4e07-8c27-c1cba0e08060",
+      "name": "Set Task Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        32,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BPD9A89RT",
+          "mode": "list",
+          "cachedResultName": "ai-automation"
+        },
+        "text": "=🆕 *New Task Created*\n*Task:* {{ $json.taskName }}\n*Assignee:* {{ $json.assignee }}",
+        "otherOptions": {}
+      },
+      "id": "997cc3cd-510d-4c02-88ec-dd58cfae07f2",
+      "name": "Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        256,
+        -112
+      ],
+      "webhookId": "bce60464-6a17-4980-8fd0-ccbe149d2c5a",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "im5tcWNWqRncInkU",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1b2c3d4-0002-4000-8000-000000000012",
+              "name": "clientName",
+              "value": "={{ $json['client Name'] }}",
+              "type": "string"
+            },
+            {
+              "id": "f1b2c3d4-0003-4000-8000-000000000013",
+              "name": "channelName",
+              "value": "={{ $json['client Name'] }} ({{ $json.Project }})",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b435af3f-6c88-490a-9788-5376894f0def",
+      "name": "Set Client Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        32,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const sanitize = (str) =>\n  String(str)\n    .toLowerCase()\n    .trim()\n    .replace(/[^a-z0-9\\s-]/g, '')\n    .replace(/\\s+/g, '-')\n    .replace(/-+/g, '-')\n    .replace(/^-|-$/g, '')\n    .slice(0, 80)\n    .replace(/-$/, '');\n\nreturn $input.all().map(item => {\n  return {\n    json: {\n      ...item.json,\n      channelName: sanitize(item.json.channelName)\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        112
+      ],
+      "id": "80b9cf97-49aa-4047-aa7b-8afd18867204",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Notion Trigger - New Client": {
+      "main": [
+        [
+          {
+            "node": "Set Client Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Slack Channel": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Task Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Task Fields": {
+      "main": [
+        [
+          {
+            "node": "Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Client Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create Slack Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4fbe4c28-0db5-4401-b040-dc24ec859b60",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "69aea508d35678ed0d58118cbc34770bc9aa35dd79211a7a53a41aa239de0186"
+  },
+  "nodeGroups": [],
+  "id": "BuN01ZJgAvfCI020",
+  "tags": []
+}
