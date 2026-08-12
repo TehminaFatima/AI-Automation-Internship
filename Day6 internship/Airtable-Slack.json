@@ -1,0 +1,827 @@
+{
+  "name": "Airtable-Slack",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "authentication": "airtableTokenApi",
+        "baseId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tbl79JsAD5Wr6hzB1/viwplWBO57Vh596a3",
+          "mode": "url"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tbl79JsAD5Wr6hzB1/viwplWBO57Vh596a3",
+          "mode": "url"
+        },
+        "triggerField": "Lead Name",
+        "additionalFields": {}
+      },
+      "id": "480195b3-a378-4193-9bc9-ee22214f1207",
+      "name": "New Lead in Airtable",
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -80
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BPJQVKXEJ",
+          "mode": "list",
+          "cachedResultName": "leads"
+        },
+        "text": "=🎯 New Lead Received!\n\n*Name:* {{$json.fields[\"Lead Name\"]}}\n*Phone:* {{$json.fields[\"Contact Number\"]}}\n*Source:* {{$json.fields.Source}}\n*Intrested Service:* {{ $json.fields[\"Interested Service\"]}}",
+        "otherOptions": {}
+      },
+      "id": "e1992e88-b9a0-461e-854d-0981e299f970",
+      "name": "Send Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        -80
+      ],
+      "webhookId": "4ffcdce2-d919-43d7-a9e5-1c8767a264fe",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "im5tcWNWqRncInkU",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "authentication": "airtableTokenApi",
+        "baseId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tblMN1MZxem15tUnn/viwomO50Vf5O6zG9p?blocks=hide",
+          "mode": "url"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tblMN1MZxem15tUnn/viwomO50Vf5O6zG9p?blocks=hide",
+          "mode": "url"
+        },
+        "triggerField": "Clinet ID",
+        "additionalFields": {}
+      },
+      "id": "48d52df4-b31d-4d72-af22-3d2f053b2bb1",
+      "name": "Airtable Record Created",
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        144
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate a unique Client ID like CLI-2026-0001\nconst now = new Date();\nconst year = now.getFullYear();\nconst randomPart = Math.floor(1000 + Math.random() * 9000);\nconst clientId = `CLI-${year}-${randomPart}`;\n\nreturn items.map(item => {\n  item.json.generatedClientId = clientId;\n  return item;\n});"
+      },
+      "id": "e4b25dd5-b543-41c3-afd3-9bbdbb85a5bc",
+      "name": "Generate Client ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_BASE_NAME",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Clients",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "Client ID": "={{ $json.generatedClientId }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Client ID",
+              "displayName": "Client ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f5802541-17df-4da1-bff5-ec2f5452a65e",
+      "name": "Save Client ID to Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        144
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "#client-onboarding"
+        },
+        "text": "=✅ New Client Onboarded!\n\n*Client Name:* {{$('Airtable Record Created').item.json['Client Name']}}\n*Client ID:* {{$('Generate Client ID').item.json.generatedClientId}}\n*Email:* {{$('Airtable Record Created').item.json['Email']}}\n*Company:* {{$('Airtable Record Created').item.json['Company']}}\n\nPlease begin onboarding checklist.",
+        "otherOptions": {}
+      },
+      "id": "3a017b40-706c-4618-8819-4e5a9c500c31",
+      "name": "Notify Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        144
+      ],
+      "webhookId": "d6d05725-e818-4d96-b550-7046d6bc9a86",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "im5tcWNWqRncInkU",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "authentication": "airtableTokenApi",
+        "baseId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tblLWyykQ4j95BudF/viwdisU6dnlXDmwVI?blocks=hide",
+          "mode": "url"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tblLWyykQ4j95BudF/viwdisU6dnlXDmwVI?blocks=hide",
+          "mode": "url"
+        },
+        "triggerField": "Status",
+        "additionalFields": {}
+      },
+      "id": "62ffc0a1-aa92-49a9-b371-8dde256300c4",
+      "name": "Project Record Updated",
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        368
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "status-not-empty",
+              "leftValue": "={{ $json.fields.Status }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "941b4996-c478-4ff9-a9b6-3725efef66ca",
+      "name": "Has Status",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        32,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "=U0BPER1MX2S",
+          "mode": "username"
+        },
+        "text": "={{ $json.fields[\"Project Name\"] }} is on {{ $json.fields.Status }} its deadline is {{ $json.fields.Deadline }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.6,
+      "position": [
+        256,
+        368
+      ],
+      "id": "ea4de479-1ba1-4a31-832c-9fe42a600b94",
+      "name": "Send a message",
+      "webhookId": "8f31873c-a8e9-4e22-b45c-c3170f6fbcb3",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "im5tcWNWqRncInkU",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "authentication": "airtableTokenApi",
+        "baseId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tblQCeMXJtTOw0uDz/viwAEqFVgnLCldMSA?blocks=hide",
+          "mode": "url"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tblQCeMXJtTOw0uDz/viwAEqFVgnLCldMSA?blocks=hide",
+          "mode": "url"
+        },
+        "triggerField": "Agent Name",
+        "additionalFields": {}
+      },
+      "id": "5d148a5b-94b1-4a63-972f-9c6eb17c0dc3",
+      "name": "AI Agent Status Updated",
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        592
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "status-is-failed-or-down",
+              "leftValue": "={{ $json.fields[\"Deployment Status\"] }}",
+              "rightValue": "Failed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "92452dd9-d328-49c4-8c0a-b9e2cf66b72c",
+              "leftValue": "={{ $json.fields[\"Deployment Status\"] }}",
+              "rightValue": "Maintenance",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "abce7849-c841-4080-8ece-d70260de48c2",
+              "leftValue": "={{ $json.fields[\"Deployment Status\"] }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "2cbcadbc-62f4-439b-9f7b-aa46c98969c0",
+      "name": "Is Critical Status",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        32,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BP1ERVCS3",
+          "mode": "list",
+          "cachedResultName": "development"
+        },
+        "text": "=🚨 AI Agent Status Alert\n\n*Agent Name:* {{$json['Agent Name']}}\n*Status:* {{$json['Status']}}\n*Last Run:* {{$json['Last Run']}}\n*Error/Notes:* {{$json['Notes']}}\n\nOperations team, please investigate.",
+        "otherOptions": {}
+      },
+      "id": "4639ec80-8bcb-42fb-a51b-dfde96491882",
+      "name": "Notify Operations Team",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        592
+      ],
+      "webhookId": "84426f32-5ec0-40c7-acd1-abf0b1dc1d28",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "im5tcWNWqRncInkU",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "authentication": "airtableTokenApi",
+        "baseId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tblX7YwYGpH8U9tep/viwZ50Eea6LjgTTlK?blocks=hide",
+          "mode": "url"
+        },
+        "tableId": {
+          "__rl": true,
+          "value": "https://airtable.com/appxJmUNyUfTiQRhM/tblX7YwYGpH8U9tep/viwZ50Eea6LjgTTlK?blocks=hide",
+          "mode": "url"
+        },
+        "triggerField": "Intern Name",
+        "additionalFields": {}
+      },
+      "id": "ab5dab59-a435-4309-8bdb-2e86fc0af8eb",
+      "name": "Task Record Updated",
+      "type": "n8n-nodes-base.airtableTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        816
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "task-is-completed",
+              "leftValue": "={{ $json.fields[\"Task Count\"] }}",
+              "rightValue": 7,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "id": "a867fcd1-bb78-4995-8511-a8015418e6a6",
+      "name": "Is Task Completed",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        32,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appxJmUNyUfTiQRhM",
+          "mode": "list",
+          "cachedResultName": "MATalogics AI Operations Base  ",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblX7YwYGpH8U9tep",
+          "mode": "list",
+          "cachedResultName": "Interns",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM/tblX7YwYGpH8U9tep"
+        },
+        "filterByFormula": "={{\"{Intern Name} = '\" + $json.fields[\"Intern Name\"]+ \"'\"}}",
+        "options": {}
+      },
+      "id": "223ee048-2b06-4e3a-ad3b-109b73ec055b",
+      "name": "Find Intern Record",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        816
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Increase performance score by fixed points per completed task\nconst POINTS_PER_TASK = 10;\n\nreturn items.map(item => {\n  const currentScore = Number(item.json['Performance Score']) || 0;\n  item.json.newPerformanceScore = currentScore + POINTS_PER_TASK;\n  return item;\n});"
+      },
+      "id": "d27e5683-d9fc-46f5-8aaf-57ba3d1f676d",
+      "name": "Calculate New Score",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        816
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appxJmUNyUfTiQRhM",
+          "mode": "list",
+          "cachedResultName": "MATalogics AI Operations Base  ",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblX7YwYGpH8U9tep",
+          "mode": "list",
+          "cachedResultName": "Interns",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM/tblX7YwYGpH8U9tep"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "Intern Name": "={{ $json[\"Intern Name\"] }}",
+            "Department": "={{ $json.Department }}",
+            "Task Count": "={{ $json[\"Task Count\"] }}",
+            "Performance Score": "={{ $json.newPerformanceScore }}",
+            "Intern ID": "={{ $json[\"Intern ID\"] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Intern Name",
+              "displayName": "Intern Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Department",
+              "displayName": "Department",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Task Count",
+              "displayName": "Task Count",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Performance Score",
+              "displayName": "Performance Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Intern ID",
+              "displayName": "Intern ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a61569b7-4097-454f-acf2-174f38a99bd5",
+      "name": "Update Performance Score",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        704,
+        816
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "New Lead in Airtable": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable Record Created": {
+      "main": [
+        [
+          {
+            "node": "Generate Client ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Client ID": {
+      "main": [
+        [
+          {
+            "node": "Save Client ID to Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Client ID to Airtable": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Project Record Updated": {
+      "main": [
+        [
+          {
+            "node": "Has Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Status": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Status Updated": {
+      "main": [
+        [
+          {
+            "node": "Is Critical Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Critical Status": {
+      "main": [
+        [
+          {
+            "node": "Notify Operations Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Record Updated": {
+      "main": [
+        [
+          {
+            "node": "Is Task Completed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Task Completed": {
+      "main": [
+        [
+          {
+            "node": "Find Intern Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Intern Record": {
+      "main": [
+        [
+          {
+            "node": "Calculate New Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate New Score": {
+      "main": [
+        [
+          {
+            "node": "Update Performance Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "df9194a8-664f-4968-bbbf-057c2d949f74",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "69aea508d35678ed0d58118cbc34770bc9aa35dd79211a7a53a41aa239de0186"
+  },
+  "nodeGroups": [],
+  "id": "Wz75CjAkGxNwGEEP",
+  "tags": []
+}

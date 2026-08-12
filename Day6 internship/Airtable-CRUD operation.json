@@ -1,0 +1,741 @@
+{
+  "name": "Airtable-CRUD operation",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Add New Student",
+        "formDescription": "Enter student details to create a new record",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Contact Number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Department",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Roll Number",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e6c970a8-edb9-48cb-b47b-ddc9a4239c87",
+      "name": "On form submission",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        208
+      ],
+      "webhookId": "0065a821-6350-4d7b-b6ab-e33c408b7a73"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appxJmUNyUfTiQRhM",
+          "mode": "list",
+          "cachedResultName": "MATalogics AI Operations Base  ",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblWb6LNzQait6b9Y",
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM/tblWb6LNzQait6b9Y"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.Name }}",
+            "email": "={{ $json.Email }}",
+            "contact number": "={{ $json[\"Contact Number\"] }}",
+            "department": "={{ $json.Department }}",
+            "roll number": "={{ $json[\"Roll Number\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "roll number",
+              "displayName": "roll number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "department",
+              "displayName": "department",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contact number",
+              "displayName": "contact number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "bd0c0c73-01ec-41e4-893b-87ccadc300ea",
+      "name": "Create Record in Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        464,
+        208
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "Records are saved",
+        "completionMessage": "=Student {{ $json.fields.Name }}(Roll No: {{ $json.fields[\"roll number\"] }}) was added successfully! Record ID: {{$json['id']}}",
+        "options": {}
+      },
+      "id": "41b21351-f42b-4176-8c3e-22a4c6f7741e",
+      "name": "Form Completion",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        688,
+        208
+      ],
+      "webhookId": "create-student-complete"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appxJmUNyUfTiQRhM",
+          "mode": "list",
+          "cachedResultName": "MATalogics AI Operations Base  ",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblWb6LNzQait6b9Y",
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM/tblWb6LNzQait6b9Y"
+        },
+        "filterByFormula": "={{\"{roll number} = '\" + $json[\"Roll Number (to find student)\"] + \"'\"}}",
+        "options": {}
+      },
+      "id": "d36df54b-1f4a-4044-bb6b-68de839daf9f",
+      "name": "Find Student by Roll Number",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        464,
+        432
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appxJmUNyUfTiQRhM",
+          "mode": "list",
+          "cachedResultName": "MATalogics AI Operations Base  ",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblWb6LNzQait6b9Y",
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM/tblWb6LNzQait6b9Y"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "email": "={{$('On form submission1').item.json[\"New Email\"]|| $json.email }}",
+            "Name": "={{ $ ('On form submission1').item.json[\"New Name\"] || $json.Name }}",
+            "roll number": "={{ $json[\"roll number\"] }}",
+            "department": "={{ $('On form submission1').item.json[\"New Department\"]|| $json.department }}",
+            "contact number": "={{ $('On form submission1').item.json[\"New Contact Number\"]||$json[\"contact number\"] }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "roll number",
+              "displayName": "roll number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "department",
+              "displayName": "department",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contact number",
+              "displayName": "contact number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "f1311122-73a2-4e96-b573-6d9150c5f75b",
+      "name": "Update Record in Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        688,
+        432
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Update Student",
+        "formDescription": "Enter Roll Number to find the student, then new values to update",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Roll Number (to find student)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "New Name"
+            },
+            {
+              "fieldLabel": "New Contact Number"
+            },
+            {
+              "fieldLabel": "New Email"
+            },
+            {
+              "fieldLabel": "New Department"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "43e0779e-e3b2-43ca-bc73-e15c4620ad36",
+      "name": "On form submission1",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        432
+      ],
+      "webhookId": "62c2b4ac-4b29-412b-a859-555783876e09"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "update records",
+        "completionMessage": "=Student record updated successfully! Name: {{$json['name']}}, Roll No: {{$json['roll_number']}}",
+        "options": {}
+      },
+      "id": "5b5da093-a650-46d9-adee-f791fb0dc5cd",
+      "name": "Form Completion1",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        912,
+        432
+      ],
+      "webhookId": "update-student-complete"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRecord",
+        "base": {
+          "__rl": true,
+          "value": "appxJmUNyUfTiQRhM",
+          "mode": "list",
+          "cachedResultName": "MATalogics AI Operations Base  ",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM"
+        },
+        "table": {
+          "__rl": true,
+          "value": "Students",
+          "mode": "name"
+        },
+        "id": "={{ $json.id }}"
+      },
+      "id": "a686003e-9cdb-43c6-a424-30e8dec2f9f5",
+      "name": "Delete Record in Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        688,
+        656
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Delete Student",
+        "formDescription": "Enter Roll Number of the student to delete",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Roll Number",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "586952af-4c59-46f5-b857-6b86306910c8",
+      "name": "On form submission2",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        656
+      ],
+      "webhookId": "31ac730e-d132-4aa1-bc00-3b781b99b855"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appxJmUNyUfTiQRhM",
+          "mode": "list",
+          "cachedResultName": "MATalogics AI Operations Base  ",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM"
+        },
+        "table": {
+          "__rl": true,
+          "value": "students",
+          "mode": "name"
+        },
+        "filterByFormula": "={{\"{roll number} = '\" + $json['Roll Number'] + \"'\"}}",
+        "options": {}
+      },
+      "id": "f8dbc5b9-8ef8-4576-9655-c73696a6fe22",
+      "name": "Find Student by Roll Number1",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        464,
+        656
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "delete record",
+        "completionMessage": "Student record deleted successfully.",
+        "options": {}
+      },
+      "id": "238f5366-fec0-441f-b5b7-cd140340ae6b",
+      "name": "Form Completion2",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        912,
+        656
+      ],
+      "webhookId": "delete-student-complete"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appxJmUNyUfTiQRhM",
+          "mode": "list",
+          "cachedResultName": "MATalogics AI Operations Base  ",
+          "cachedResultUrl": "https://airtable.com/appxJmUNyUfTiQRhM"
+        },
+        "table": {
+          "__rl": true,
+          "value": "Students",
+          "mode": "name"
+        },
+        "filterByFormula": "={{\"{roll number} = '\" + $json['Roll Number'] + \"'\"}}",
+        "options": {}
+      },
+      "id": "3d1199b1-4731-4313-8012-e2a5cdd61fe7",
+      "name": "Search Record in Airtable",
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        464,
+        880
+      ],
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Search Student",
+        "formDescription": "Enter Roll Number to search for a student",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Roll Number",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fee0b880-b11f-46fc-a777-8bc05db97419",
+      "name": "On form submission3",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        880
+      ],
+      "webhookId": "8016e40e-4636-4a8e-9652-a1609fb50046"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "search record",
+        "completionMessage": "=Name: {{$json['name']}}\nContact: {{$json['contact_number']}}\nEmail: {{$json['email']}}\nDepartment: {{$json['department']}}\nRoll No: {{$json['roll_number']}}",
+        "options": {}
+      },
+      "id": "2b8bfb15-105b-4a19-bba7-8accc83ee36b",
+      "name": "Form Completion3",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 1,
+      "position": [
+        688,
+        880
+      ],
+      "webhookId": "search-student-complete"
+    },
+    {
+      "parameters": {
+        "content": "Create records\n",
+        "height": 176,
+        "width": 1136
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "2298296a-e84a-4394-af6c-d512e1900f21",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "update record",
+        "height": 176,
+        "width": 1248,
+        "color": "#858BE5"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        416
+      ],
+      "typeVersion": 1,
+      "id": "2f9ff241-1d83-4bdf-8bab-f650f7ef2c08",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Delete records\n",
+        "height": 176,
+        "width": 1238,
+        "color": "#D78ECA"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        640
+      ],
+      "typeVersion": 1,
+      "id": "449d3f16-ce00-46a5-bc99-804f113aacdd",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "##Search Record##\n",
+        "height": 192,
+        "width": 992,
+        "color": "#88C487"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        16,
+        848
+      ],
+      "typeVersion": 1,
+      "id": "f9bd5a1c-b7c3-444c-a80f-a56c5e8acbc4",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Create Record in Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Record in Airtable": {
+      "main": [
+        [
+          {
+            "node": "Form Completion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Student by Roll Number": {
+      "main": [
+        [
+          {
+            "node": "Update Record in Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Record in Airtable": {
+      "main": [
+        [
+          {
+            "node": "Form Completion1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "Find Student by Roll Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Record in Airtable": {
+      "main": [
+        [
+          {
+            "node": "Form Completion2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission2": {
+      "main": [
+        [
+          {
+            "node": "Find Student by Roll Number1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Student by Roll Number1": {
+      "main": [
+        [
+          {
+            "node": "Delete Record in Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Record in Airtable": {
+      "main": [
+        [
+          {
+            "node": "Form Completion3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission3": {
+      "main": [
+        [
+          {
+            "node": "Search Record in Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b9c8342c-1e95-4fa0-bba1-3d7bc67b5e38",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "69aea508d35678ed0d58118cbc34770bc9aa35dd79211a7a53a41aa239de0186"
+  },
+  "nodeGroups": [],
+  "id": "dsxrJxKaOsVOuyxt",
+  "tags": []
+}
