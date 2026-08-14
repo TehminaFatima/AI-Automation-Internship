@@ -1,0 +1,641 @@
+{
+  "name": "Client Onboarding Voice Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const args = $input.first().json.body.message.toolCalls[0].function.arguments;\n\nreturn [\n  {\n    json: {\n      email: args.Email,\n      budget: args.Budget,\n      client_name:args.Client_Name,\n      company_name:args.Company_name,\n      service_required:args.Service_required,\n      project_description:args.Project_description,\n      \n  \n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        672
+      ],
+      "id": "d3f3c474-7c77-499b-8869-e806071dcab8",
+      "name": "Extract Booking Arguments"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "b1b8fd7f-d888-4439-b1f1-dc449b4c8b11",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -832,
+        672
+      ],
+      "id": "e9078360-fae5-4bce-85af-bbc303175224",
+      "name": "Webhook - Receive Client's information",
+      "webhookId": "b1b8fd7f-d888-4439-b1f1-dc449b4c8bca"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=client name is {{ $json.client_name }} client email is {{ $json.email }} client company name is {{ $json.company_name }} client budget is {{ $json.budget }} client required {{ $json.service_required }} project description is {{ $json.project_description }}",
+        "options": {
+          "systemMessage": "You are a backend client-processing agent in an n8n workflow.\n\nThe client information has already been collected. Your job is to process it — do not ask questions, contact the client, or invent information.\n\nDetermine priority from the client's budget:\n- 500000 PKR or more = high\n- 200000 PKR to less than 500000 PKR = medium\n- Less than 200000 PKR = low\n- Unknown budget = low\n\nTreat PKR, Rs, and rupees as Pakistani Rupees. Preserve the original budget value and currency as given — never convert or reformat it.\nalso analyze the service category\nMap service_required to the service field.\nWrite a concise 1-2 sentence summary using only the information provided.\n\nSet:\n- status = \"new\"\n- created_at = today's date\n- next_action = \"Review project requirements and contact the client\"\n\nIf company_name or budget is missing, use an empty string for that field.\n\nRespond with ONLY a valid JSON object with these exact keys: client_name, company_name, email, service, budget, priority, service_category , project_description, summary, status, created_at, next_action.\nDo not include markdown code fences, explanations, or any text outside the JSON object."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -384,
+        672
+      ],
+      "id": "1df65a44-aecd-4ec6-ad3e-9775cf2f02cd",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -312,
+        904
+      ],
+      "id": "e95b6288-8848-4284-9a51-0e2d2c7006a4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "RRAUz2cieHBr3YSU",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output || $json.text || '';\n\n// Strip markdown code fences if present\nconst cleaned = raw.replace(/```json\\s*|```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (err) {\n  throw new Error(`AI Agent output was not valid JSON: ${cleaned}`);\n}\n\nreturn parsed;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        672
+      ],
+      "id": "b3c58386-2d95-48af-ae49-bc192945ec22",
+      "name": "converting json format"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appPCUPVznbR4ADoq",
+          "mode": "list",
+          "cachedResultName": "Client Onboarding agent database",
+          "cachedResultUrl": "https://airtable.com/appPCUPVznbR4ADoq"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblMES6L8LvUJTTjb",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appPCUPVznbR4ADoq/tblMES6L8LvUJTTjb"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Client Name": "={{ $json.client_name }}",
+            "Project description": "={{ $json.project_description }}",
+            "email": "={{ $json.email }}",
+            "priority": "={{ $json.priority }}",
+            "summary": "={{ $json.summary }}",
+            "project category": "={{ $json.service_category }}",
+            "Status": "={{ $json.status }}",
+            "Created At": "={{ $json.created_at }}",
+            "Budget": "={{ $json.budget }}",
+            "company": "={{ $json.company_name }}",
+            "service": "={{ $json.service }}",
+            "next action": "={{ $json.next_action }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Client Name",
+              "displayName": "Client Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Project description",
+              "displayName": "Project description",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "project category",
+              "displayName": "project category",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created At",
+              "displayName": "Created At",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "service",
+              "displayName": "service",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "next action",
+              "displayName": "next action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        672
+      ],
+      "id": "6cf34ba7-8718-4f3b-819d-784df26010d9",
+      "name": "Create or update a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appPCUPVznbR4ADoq",
+          "mode": "list",
+          "cachedResultName": "Client Onboarding agent database",
+          "cachedResultUrl": "https://airtable.com/appPCUPVznbR4ADoq"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblMES6L8LvUJTTjb",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appPCUPVznbR4ADoq/tblMES6L8LvUJTTjb"
+        },
+        "filterByFormula": "={Email} = '{{ $json.email }}'",
+        "options": {
+          "fields": []
+        },
+        "sort": {
+          "property": []
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        192,
+        672
+      ],
+      "id": "c1f8eb4f-7c16-4dd7-8ffd-26965759d781",
+      "name": "Search records",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "EjtAu6Q3Z5ngZHPJ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ec80ee1c-c024-4113-9c69-e6711aaa5ebc",
+              "leftValue": "={{ $json.is_new_client }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        672
+      ],
+      "id": "d1fcd464-d6f4-41dd-bab0-1236bd432ea1",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "dataSourceId": {
+          "__rl": true,
+          "value": "3b9a64ef-4b75-8066-81a5-000b1a6ea7d8",
+          "mode": "list",
+          "cachedResultName": "Client’s onboarding",
+          "cachedResultUrl": "https://app.notion.com/p/3b9a64ef4b75800abad2e2269651bc38"
+        },
+        "title": "={{ $json.fields.service }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "client Name|title",
+              "title": "={{ $json.fields[\"Client Name\"] }}"
+            },
+            {
+              "key": "Budget|rich_text",
+              "textContent": "={{ $json.fields.Budget }}"
+            },
+            {
+              "key": "Company|rich_text",
+              "textContent": "={{ $json.fields.company }}"
+            },
+            {
+              "key": "email|rich_text",
+              "textContent": "={{ $json.fields.email }}"
+            },
+            {
+              "key": "priority|rich_text",
+              "textContent": "={{ $json.fields.priority }}"
+            },
+            {
+              "key": "project description|rich_text",
+              "textContent": "={{ $json.fields[\"Project description\"] }}"
+            },
+            {
+              "key": "status|rich_text",
+              "textContent": "={{ $json.fields.Status }}"
+            },
+            {
+              "key": "next actions|rich_text",
+              "textContent": "={{ $json.fields[\"next action\"] }}"
+            },
+            {
+              "key": "service|rich_text",
+              "textContent": "={{ $json.fields.service }}"
+            },
+            {
+              "key": "created at|rich_text",
+              "textContent": "={{ $json.fields[\"Created At\"] }}"
+            },
+            {
+              "key": "summary|rich_text",
+              "textContent": "={{ $json.fields.summary }}"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 3,
+      "position": [
+        1088,
+        672
+      ],
+      "id": "46af1516-1c01-4d99-8d1d-b4020a2ffe85",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "d78x301WJS1cgMVe",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BQ2MF0J06",
+          "mode": "list",
+          "cachedResultName": "call-center-voice-support"
+        },
+        "text": "=#new-clients\n\n{{ $json.property_client_name }}-{{ $json.property_company }}\nclient's email : {{ $json.property_email }}\nBudget: {{ $json.property_budget }}\nAI summary : {{ $json.property_summary }}\nPriority : {{ $json.property_priority }}\nNext Action to do :{{ $json.property_next_actions }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.6,
+      "position": [
+        1312,
+        672
+      ],
+      "id": "d1ac8100-04fe-407f-9576-c449d59bb9f9",
+      "name": "Send a message",
+      "webhookId": "cfef0312-80ec-44f9-98e2-876a5d28ce4f",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "im5tcWNWqRncInkU",
+          "name": "Slack account 2"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Client information has been received and processed successfully.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1536,
+        672
+      ],
+      "id": "b04b5291-9d37-4028-a837-474cf67fd5cd",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const client = $('converting json format').first().json;\n\nconst searchItems = $('Search records').all();\n\nconst exists = searchItems.some(item => {\n  return item.json.email === client.email;\n});\n\nreturn [{\n  json: {\n    ...client,\n    is_new_client: !exists\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        672
+      ],
+      "id": "37a68ad4-e08a-4c5f-be21-096a83d36299",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract Booking Arguments": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Receive Client's information": {
+      "main": [
+        [
+          {
+            "node": "Extract Booking Arguments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "converting json format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "converting json format": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a record": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Create or update a record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4fd70b9b-653c-4863-883b-05f917097746",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "69aea508d35678ed0d58118cbc34770bc9aa35dd79211a7a53a41aa239de0186"
+  },
+  "nodeGroups": [],
+  "id": "rhIfRNGRwKYdMQLh",
+  "tags": []
+}
