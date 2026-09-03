@@ -21,7 +21,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://tehminafatima.app.n8n.cloud/webhook-test/urbancart/chat-inbound",
+        "url": "https://tehminafatima.app.n8n.cloud/webhook/urbancart/voice_backend",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{\n  {\n    from_phone: $json.from_phone,\n    profile_name: $json.profile_name,\n    message_text: $json.message_text,\n    customer_name: $json.name,\n    summary_message: $json.summary_message,\n    customer_number: $json.number\n  }\n}}",
@@ -1061,7 +1061,7 @@
     "binaryMode": "separate",
     "availableInMCP": true
   },
-  "versionId": "155a7a7d-6719-4791-b22b-e97a0a77a1d7",
+  "versionId": "3a0679af-5026-42e3-a568-b833a4ac195b",
   "meta": {
     "aiBuilderAssisted": true,
     "builderVariant": "mcp",
