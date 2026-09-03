@@ -1,0 +1,1074 @@
+{
+  "name": "UrbanCart - Voice (Vapi Receptionist)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "urbancart/vapi-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d5132f13-4ef8-4dd3-9320-ab0f4bf14168",
+      "name": "Webhook - Vapi Tool Call",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "83d13775-4bc9-42f6-9f8e-50cb80c54d36"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tehminafatima.app.n8n.cloud/webhook-test/urbancart/chat-inbound",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    from_phone: $json.from_phone,\n    profile_name: $json.profile_name,\n    message_text: $json.message_text,\n    customer_name: $json.name,\n    summary_message: $json.summary_message,\n    customer_number: $json.number\n  }\n}}",
+        "options": {}
+      },
+      "id": "74889be7-c283-4d21-88fb-51fd2b2cdfa8",
+      "name": "Call Chat & Voice AI Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "results",
+              "name": "results",
+              "value": "={{ [ { toolCallId: $('Extract Tool Call Fields').item.json.tool_call_id, result: $json.reply } ] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "11ad1288-db29-4e01-adec-d648beb9b888",
+      "name": "Format Vapi Tool Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "415f9b35-3e70-4fd9-bd74-b593851de404",
+      "name": "Respond to Vapi",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-5-MINI",
+          "cachedResultUrl": ""
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Take the following text from `{{ $json.message_test }}` and extract the information into a clean, valid JSON object.\n\nReturn ONLY the JSON object. Do not add explanations, markdown, or extra text.\n\nUse exactly these fields:\n\n{\n\"name\": \"\",\n\"summary_message\": \"\",\n\"number\": \"\"\n}\n\nRules:\n\n* `name`: Extract the customer's full name.\n* `summary_message`: Keep the complete customer lead/message as a concise summary.\n* `number`: Extract the customer's phone/contact number.\n* If any field is not available, return `null`.\n* Make sure the output is valid JSON.\n* Do not create additional fields.\n\nInput:\n{{ $json.message_test }}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "41f80be6-5b75-40d7-b357-a2bc49261cb4",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Kln5lYccVkVQeszz",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const args = \n$input.first().json.body.message.toolCalls[0].function[\"arguments\"];\nreturn[\n  {\n    json:{\n      message_test: args.message_text,\n    \n    }\n  }]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f6d6390b-ff6c-4915-bd11-1e670deca256",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.first().json.output[0].content[0].text;\n\nconst cleanedText = text\n  .replace(/```json\\s*/i, '')\n  .replace(/```\\s*$/i, '')\n  .trim();\n\nconst data = JSON.parse(cleanedText);\n\nreturn [\n  {\n    json: {\n      name: data.name || null,\n      summary_message: data.summary_message || null,\n      number: data.number ? data.number.replace(/\\s/g, '') : null\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "1da2bca8-1b04-481c-917b-4da5c987d8b4",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {
+    "Webhook - Vapi Tool Call": [
+      {
+        "json": {
+          "headers": {
+            "host": "tehminafatima.app.n8n.cloud",
+            "user-agent": "axios/1.19.0",
+            "content-length": "23033",
+            "accept": "application/json, text/plain, */*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "52.42.204.7",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "a35611a1bca4302c-PDX",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "cookie": "callId=01a0680f-4b5a-766d-8237-975876fe0978",
+            "x-call-id": "01a0680f-4b5a-766d-8237-975876fe0978",
+            "x-forwarded-for": "52.42.204.7, 104.23.160.174",
+            "x-forwarded-host": "tehminafatima.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-79-57dcb74966-kvqbp",
+            "x-is-trusted": "yes",
+            "x-real-ip": "52.42.204.7",
+            "x-vapi-secret": ""
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "message": {
+              "timestamp": 1788452290791,
+              "type": "tool-calls",
+              "toolCalls": [
+                {
+                  "id": "call_F1bIQ2RBqu1gxZ3qT7ZPdBsI",
+                  "type": "function",
+                  "function": {
+                    "name": "askUrbanCart",
+                    "arguments": {
+                      "message_text": "Customer named Sara Khan wants the iPhone 16 Pro, budget around 300,000 rupees, based in Karachi, ready to buy, contact number 03701360540."
+                    }
+                  }
+                }
+              ],
+              "toolCallList": [
+                {
+                  "id": "call_F1bIQ2RBqu1gxZ3qT7ZPdBsI",
+                  "type": "function",
+                  "function": {
+                    "name": "askUrbanCart",
+                    "arguments": {
+                      "message_text": "Customer named Sara Khan wants the iPhone 16 Pro, budget around 300,000 rupees, based in Karachi, ready to buy, contact number 03701360540."
+                    }
+                  }
+                }
+              ],
+              "toolWithToolCallList": [
+                {
+                  "type": "function",
+                  "function": {
+                    "name": "askUrbanCart",
+                    "strict": true,
+                    "parameters": {
+                      "type": "object",
+                      "required": [
+                        "message_text"
+                      ],
+                      "properties": {
+                        "message_text": {
+                          "type": "string",
+                          "description": "The customer's question or statement, or your own summary of a lead/complaint, in plain natural language."
+                        }
+                      }
+                    },
+                    "description": "Send the customer's question, order lookup, lead details, or complaint to UrbanCart's backend and get back what to say next. Always call this before answering any product, policy, order-status, lead, or complaint question."
+                  },
+                  "async": false,
+                  "server": {
+                    "url": "https://tehminafatima.app.n8n.cloud/webhook-test/urbancart/vapi-webhook",
+                    "timeoutSeconds": 20,
+                    "staticIpAddressesEnabled": false
+                  },
+                  "messages": [
+                    {
+                      "type": "request-start",
+                      "contents": [],
+                      "conditions": [],
+                      "blocking": false
+                    }
+                  ],
+                  "variableExtractionPlan": {
+                    "schema": {
+                      "type": "object",
+                      "required": [],
+                      "properties": {}
+                    }
+                  },
+                  "toolCall": {
+                    "id": "call_F1bIQ2RBqu1gxZ3qT7ZPdBsI",
+                    "type": "function",
+                    "function": {
+                      "name": "askUrbanCart",
+                      "arguments": {
+                        "message_text": "Customer named Sara Khan wants the iPhone 16 Pro, budget around 300,000 rupees, based in Karachi, ready to buy, contact number 03701360540."
+                      }
+                    }
+                  }
+                }
+              ],
+              "artifact": {
+                "messages": [
+                  {
+                    "role": "system",
+                    "message": "You are the UrbanCart Voice Receptionist, an AI phone assistant for UrbanCart, an e-commerce company in Pakistan selling electronics, accessories, home and lifestyle products.\n\nYou are speaking with a live customer on the phone. Keep every response short, natural, and conversational — one or two sentences at a time, the way a helpful human receptionist would talk. Never read out long lists or lengthy paragraphs, and never read a document verbatim — summarize naturally in your own words. Never mention that you are an AI system, a workflow, a webhook, a database, or a \"knowledge base\" — you are UrbanCart's phone assistant, full stop.\n\nYOU HAVE TWO SOURCES OF INFORMATION:\n1. Your attached Knowledge Base — UrbanCart's current product catalog, return policy, shipping policy, warranty information and support guidelines. Use this automatically for any product or policy question.\n2. The \"askUrbanCart\" tool — a live connection to UrbanCart's systems, used only for order status lookups, lead cap...",
+                    "time": 1788452228093,
+                    "secondsFromStart": 0
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Thanks for calling UrbanCart. I'm your virtual assistant; I can help with product questions, delivery and returns, checking existing order, or connect you with our sales or support team. How can I help you today?",
+                    "time": 1788452230021,
+                    "endTime": 1788452240521,
+                    "secondsFromStart": 1.5,
+                    "duration": 10500,
+                    "source": "",
+                    "assistantName": "UrbanCart Voice Receptionist",
+                    "assistantId": "ee8d1296-3f20-488b-b630-1ca649a3844c"
+                  },
+                  {
+                    "role": "user",
+                    "message": "My name is Sara Khan, and I want to buy a. iPhone. 16. Pro. And my budget is 3 lakh rupees. And my number is 0370136054. And I'm from Karachi.",
+                    "time": 1788452243076,
+                    "endTime": 1788452258196,
+                    "secondsFromStart": 14.555,
+                    "duration": 9240,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "My",
+                          "start": 14.52,
+                          "end": 14.58,
+                          "confidence": 0.986,
+                          "punctuated_word": "My",
+                          "language": "en"
+                        },
+                        {
+                          "word": "name",
+                          "start": 14.7,
+                          "end": 14.76,
+                          "confidence": 1,
+                          "punctuated_word": "name",
+                          "language": "en"
+                        },
+                        {
+                          "word": "is",
+                          "start": 14.82,
+                          "end": 14.88,
+                          "confidence": 1,
+                          "punctuated_word": "is",
+                          "language": "en"
+                        },
+                        {
+                          "word": "S",
+                          "start": 14.94,
+                          "end": 15,
+                          "confidence": 0.926,
+                          "punctuated_word": "S",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ara",
+                          "start": 15.12,
+                          "end": 15.18,
+                          "confidence": 0.699,
+                          "punctuated_word": "ara",
+                          "language": "en"
+                        },
+                        {
+                          "word": "Kh",
+                          "start": 15.24,
+                          "end": 15.3,
+                          "confidence": 0.987,
+                          "punctuated_word": "Kh",
+                          "language": "en"
+                        },
+                        {
+                          "word": "an,",
+                          "start": 15.36,
+                          "end": 15.42,
+                          "confidence": 0.998,
+                          "punctuated_word": "an,",
+                          "language": "en"
+                        },
+                        {
+                          "word": "and",
+                          "start": 15.66,
+                          "end": 15.72,
+                          "confidence": 1,
+                          "punctuated_word": "and",
+                          "language": "en"
+                        },
+                        {
+                          "word": "I",
+                          "start": 15.9,
+                          "end": 15.96,
+                          "confidence": 1,
+                          "punctuated_word": "I",
+                          "language": "en"
+                        },
+                        {
+                          "word": "w",
+                          "start": 16.2,
+                          "end": 16.26,
+                          "confidence": 1,
+                          "punctuated_word": "w",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ant",
+                          "start": 16.38,
+                          "end": 16.44,
+                          "confidence": 1,
+                          "punctuated_word": "ant",
+                          "language": "en"
+                        },
+                        {
+                          "word": "to",
+                          "start": 16.5,
+                          "end": 16.56,
+                          "confidence": 1,
+                          "punctuated_word": "to",
+                          "language": "en"
+                        },
+                        {
+                          "word": "b",
+                          "start": 16.8,
+                          "end": 16.86,
+                          "confidence": 0.924,
+                          "punctuated_word": "b",
+                          "language": "en"
+                        },
+                        {
+                          "word": "uy",
+                          "start": 16.92,
+                          "end": 16.98,
+                          "confidence": 0.999,
+                          "punctuated_word": "uy",
+                          "language": "en"
+                        },
+                        {
+                          "word": "a.",
+                          "start": 17.58,
+                          "end": 17.64,
+                          "confidence": 0.859,
+                          "punctuated_word": "a.",
+                          "language": "en"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "role": "bot",
+                    "message": "Thanks. Thank you, Sara. Just to confirm, you're interested in the iPhone 16 Pro with a budget of around $300,000, located in Karachi, and your contact number is 03 7013 6054. Are you ready to buy now, or still comparing options?",
+                    "time": 1788452257021,
+                    "endTime": 1788452275801,
+                    "secondsFromStart": 28.5,
+                    "duration": 16080,
+                    "source": "",
+                    "assistantName": "UrbanCart Voice Receptionist",
+                    "assistantId": "ee8d1296-3f20-488b-b630-1ca649a3844c"
+                  },
+                  {
+                    "role": "user",
+                    "message": "Please edit my number, which is 03701360540, and I'm ready to buy now.",
+                    "time": 1788452278476,
+                    "endTime": 1788452284236,
+                    "secondsFromStart": 49.955,
+                    "duration": 5760,
+                    "metadata": {
+                      "wordLevelConfidence": [
+                        {
+                          "word": "P",
+                          "start": 49.92,
+                          "end": 49.98,
+                          "confidence": 0.998,
+                          "punctuated_word": "P",
+                          "language": "en"
+                        },
+                        {
+                          "word": "le",
+                          "start": 49.98,
+                          "end": 50.04,
+                          "confidence": 1,
+                          "punctuated_word": "le",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ase",
+                          "start": 50.1,
+                          "end": 50.16,
+                          "confidence": 0.998,
+                          "punctuated_word": "ase",
+                          "language": "en"
+                        },
+                        {
+                          "word": "edit",
+                          "start": 50.22,
+                          "end": 50.28,
+                          "confidence": 0.771,
+                          "punctuated_word": "edit",
+                          "language": "en"
+                        },
+                        {
+                          "word": "my",
+                          "start": 50.52,
+                          "end": 50.58,
+                          "confidence": 1,
+                          "punctuated_word": "my",
+                          "language": "en"
+                        },
+                        {
+                          "word": "number",
+                          "start": 50.7,
+                          "end": 50.76,
+                          "confidence": 1,
+                          "punctuated_word": "number",
+                          "language": "en"
+                        },
+                        {
+                          "word": ",",
+                          "start": 50.94,
+                          "end": 51,
+                          "confidence": 0.996,
+                          "punctuated_word": ",",
+                          "language": "en"
+                        },
+                        {
+                          "word": "which",
+                          "start": 51,
+                          "end": 51.06,
+                          "confidence": 1,
+                          "punctuated_word": "which",
+                          "language": "en"
+                        },
+                        {
+                          "word": "is",
+                          "start": 51.24,
+                          "end": 51.3,
+                          "confidence": 0.999,
+                          "punctuated_word": "is",
+                          "language": "en"
+                        },
+                        {
+                          "word": "0",
+                          "start": 51.42,
+                          "end": 51.48,
+                          "confidence": 1,
+                          "punctuated_word": "0",
+                          "language": "en"
+                        },
+                        {
+                          "word": "3",
+                          "start": 51.72,
+                          "end": 51.78,
+                          "confidence": 1,
+                          "punctuated_word": "3",
+                          "language": "en"
+                        },
+                        {
+                          "word": "7",
+                          "start": 51.96,
+                          "end": 52.02,
+                          "confidence": 1,
+                          "punctuated_word": "7",
+                          "language": "en"
+                        },
+                        {
+                          "word": "0",
+                          "start": 52.2,
+                          "end": 52.26,
+                          "confidence": 1,
+                          "punctuated_word": "0",
+                          "language": "en"
+                        },
+                        {
+                          "word": "1",
+                          "start": 52.5,
+                          "end": 52.56,
+                          "confidence": 0.998,
+                          "punctuated_word": "1",
+                          "language": "en"
+                        },
+                        {
+                          "word": "3",
+                          "start": 52.74,
+                          "end": 52.8,
+                          "confidence": 1,
+                          "punctuated_word": "3",
+                          "language": "en"
+                        },
+                        {
+                          "word": "6",
+                          "start": 52.98,
+                          "end": 53.04,
+                          "confidence": 1,
+                          "punctuated_word": "6",
+                          "language": "en"
+                        },
+                        {
+                          "word": "0",
+                          "start": 53.16,
+                          "end": 53.22,
+                          "confidence": 1,
+                          "punctuated_word": "0",
+                          "language": "en"
+                        },
+                        {
+                          "word": "5",
+                          "start": 53.46,
+                          "end": 53.52,
+                          "confidence": 1,
+                          "punctuated_word": "5",
+                          "language": "en"
+                        },
+                        {
+                          "word": "4",
+                          "start": 53.76,
+                          "end": 53.82,
+                          "confidence": 1,
+                          "punctuated_word": "4",
+                          "language": "en"
+                        },
+                        {
+                          "word": "0",
+                          "start": 54,
+                          "end": 54.06,
+                          "confidence": 1,
+                          "punctuated_word": "0",
+                          "language": "en"
+                        },
+                        {
+                          "word": ",",
+                          "start": 54.42,
+                          "end": 54.48,
+                          "confidence": 0.817,
+                          "punctuated_word": ",",
+                          "language": "en"
+                        },
+                        {
+                          "word": "and",
+                          "start": 54.54,
+                          "end": 54.6,
+                          "confidence": 1,
+                          "punctuated_word": "and",
+                          "language": "en"
+                        },
+                        {
+                          "word": "I",
+                          "start": 54.84,
+                          "end": 54.9,
+                          "confidence": 1,
+                          "punctuated_word": "I",
+                          "language": "en"
+                        },
+                        {
+                          "word": "'",
+                          "start": 54.96,
+                          "end": 55.02,
+                          "confidence": 0.562,
+                          "punctuated_word": "'",
+                          "language": "en"
+                        },
+                        {
+                          "word": "m",
+                          "start": 55.02,
+                          "end": 55.08,
+                          "confidence": 1,
+                          "punctuated_word": "m",
+                          "language": "en"
+                        },
+                        {
+                          "word": "re",
+                          "start": 55.14,
+                          "end": 55.2,
+                          "confidence": 1,
+                          "punctuated_word": "re",
+                          "language": "en"
+                        },
+                        {
+                          "word": "ady",
+                          "start": 55.26,
+                          "end": 55.32,
+                          "confidence": 1,
+                          "punctuated_word": "ady",
+                          "language": "en"
+                        },
+                        {
+                          "word": "to",
+                          "start": 55.38,
+                          "end": 55.44,
+                          "confidence": 1,
+                          "punctuated_word": "to",
+                          "language": "en"
+                        },
+                        {
+                          "word": "b",
+                          "start": 55.56,
+                          "end": 55.62,
+                          "confidence": 1,
+                          "punctuated_word": "b",
+                          "language": "en"
+                        },
+                        {
+                          "word": "uy",
+                          "start": 55.62,
+                          "end": 55.68,
+                          "confidence": 1,
+                          "punctuated_word": "uy",
+                          "language": "en"
+                        },
+                        {
+                          "word": "now",
+                          "start": 55.68,
+                          "end": 55.68,
+                          "confidence": 0.989,
+                          "punctuated_word": "now",
+                          "language": "en"
+                        },
+                        {
+                          "word": ".",
+                          "start": 55.68,
+                          "end": 55.68,
+                          "confidence": 0.991,
+                          "punctuated_word": ".",
+                          "language": "en"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "toolCalls": [
+                      {
+                        "id": "call_F1bIQ2RBqu1gxZ3qT7ZPdBsI",
+                        "type": "function",
+                        "function": {
+                          "name": "askUrbanCart",
+                          "arguments": "{\n  \"message_text\": \"Customer named Sara Khan wants the iPhone 16 Pro, budget around 300,000 rupees, based in Karachi, ready to buy, contact number 03701360540.\"\n}"
+                        }
+                      }
+                    ],
+                    "role": "tool_calls",
+                    "message": "",
+                    "time": 1788452290782,
+                    "secondsFromStart": 62.261
+                  }
+                ],
+                "messagesOpenAIFormatted": [
+                  {
+                    "role": "system",
+                    "content": "You are the UrbanCart Voice Receptionist, an AI phone assistant for UrbanCart, an e-commerce company in Pakistan selling electronics, accessories, home and lifestyle products.\n\nYou are speaking with a live customer on the phone. Keep every response short, natural, and conversational — one or two sentences at a time, the way a helpful human receptionist would talk. Never read out long lists or lengthy paragraphs, and never read a document verbatim — summarize naturally in your own words. Never mention that you are an AI system, a workflow, a webhook, a database, or a \"knowledge base\" — you are UrbanCart's phone assistant, full stop.\n\nYOU HAVE TWO SOURCES OF INFORMATION:\n1. Your attached Knowledge Base — UrbanCart's current product catalog, return policy, shipping policy, warranty information and support guidelines. Use this automatically for any product or policy question.\n2. The \"askUrbanCart\" tool — a live connection to UrbanCart's systems, used only for order status lookups, lead cap..."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Thanks for calling UrbanCart. I'm your virtual assistant; I can help with product questions, delivery and returns, checking existing order, or connect you with our sales or support team. How can I help you today?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "My name is Sara Khan, and I want to buy a. iPhone. 16. Pro. And my budget is 3 lakh rupees. And my number is 0370136054. And I'm from Karachi."
+                  },
+                  {
+                    "role": "assistant",
+                    "content": "Thanks. Thank you, Sara. Just to confirm, you're interested in the iPhone 16 Pro with a budget of around $300,000, located in Karachi, and your contact number is 03 7013 6054. Are you ready to buy now, or still comparing options?"
+                  },
+                  {
+                    "role": "user",
+                    "content": "Please edit my number, which is 03701360540, and I'm ready to buy now."
+                  },
+                  {
+                    "role": "assistant",
+                    "tool_calls": [
+                      {
+                        "id": "call_F1bIQ2RBqu1gxZ3qT7ZPdBsI",
+                        "type": "function",
+                        "function": {
+                          "name": "askUrbanCart",
+                          "arguments": "{\n  \"message_text\": \"Customer named Sara Khan wants the iPhone 16 Pro, budget around 300,000 rupees, based in Karachi, ready to buy, contact number 03701360540.\"\n}"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "role": "tool",
+                    "tool_call_id": "call_F1bIQ2RBqu1gxZ3qT7ZPdBsI",
+                    "content": "Tool Result Still Pending But Proceed Further If Possible."
+                  }
+                ],
+                "variables": {
+                  "now": "Sep 3, 2026, 4:17 PM UTC",
+                  "currentDateTime": "Thursday, September 3, 2026 at 4:17 PM UTC",
+                  "date": "Sep 3, 2026 UTC",
+                  "time": "4:17 PM UTC",
+                  "year": "2026",
+                  "month": "September",
+                  "day": "3",
+                  "transport": {
+                    "conversationType": "voice",
+                    "provider": "daily",
+                    "videoRecordingEnabled": false,
+                    "assistantVideoEnabled": false,
+                    "roomDeleteOnUserLeaveEnabled": true,
+                    "callUrl": "https://vapi.daily.co/k9sdJIS5DptGpViBUPLy"
+                  },
+                  "call": {
+                    "id": "01a0680f-4b5a-766d-8237-975876fe0978",
+                    "type": "webCall",
+                    "status": "queued",
+                    "createdAt": "2026-09-03T16:17:07.930Z",
+                    "transport": {
+                      "conversationType": "voice",
+                      "provider": "daily",
+                      "videoRecordingEnabled": false,
+                      "assistantVideoEnabled": false,
+                      "roomDeleteOnUserLeaveEnabled": true,
+                      "callUrl": "https://vapi.daily.co/k9sdJIS5DptGpViBUPLy"
+                    }
+                  }
+                },
+                "variableValues": {
+                  "now": "Sep 3, 2026, 4:17 PM UTC",
+                  "currentDateTime": "Thursday, September 3, 2026 at 4:17 PM UTC",
+                  "date": "Sep 3, 2026 UTC",
+                  "time": "4:17 PM UTC",
+                  "year": "2026",
+                  "month": "September",
+                  "day": "3",
+                  "transport": {
+                    "conversationType": "voice",
+                    "provider": "daily",
+                    "videoRecordingEnabled": false,
+                    "assistantVideoEnabled": false,
+                    "roomDeleteOnUserLeaveEnabled": true,
+                    "callUrl": "https://vapi.daily.co/k9sdJIS5DptGpViBUPLy"
+                  },
+                  "call": {
+                    "id": "01a0680f-4b5a-766d-8237-975876fe0978",
+                    "type": "webCall",
+                    "status": "queued",
+                    "createdAt": "2026-09-03T16:17:07.930Z",
+                    "transport": {
+                      "conversationType": "voice",
+                      "provider": "daily",
+                      "videoRecordingEnabled": false,
+                      "assistantVideoEnabled": false,
+                      "roomDeleteOnUserLeaveEnabled": true,
+                      "callUrl": "https://vapi.daily.co/k9sdJIS5DptGpViBUPLy"
+                    }
+                  }
+                }
+              },
+              "call": {
+                "id": "01a0680f-4b5a-766d-8237-975876fe0978",
+                "orgId": "417b3e25-869c-4e11-b60d-520a10d07142",
+                "createdAt": "2026-09-03T16:17:07.930Z",
+                "updatedAt": "2026-09-03T16:17:07.930Z",
+                "type": "webCall",
+                "cost": 0,
+                "monitor": {
+                  "listenUrl": "wss://phone-call-websocket.aws-us-west-2-backend-production3.vapi.ai/01a0680f-4b5a-766d-8237-975876fe0978/listen",
+                  "controlUrl": "https://phone-call-websocket.aws-us-west-2-backend-production3.vapi.ai/01a0680f-4b5a-766d-8237-975876fe0978/control"
+                },
+                "transport": {
+                  "conversationType": "voice",
+                  "provider": "daily",
+                  "videoRecordingEnabled": false,
+                  "assistantVideoEnabled": false,
+                  "roomDeleteOnUserLeaveEnabled": true,
+                  "callUrl": "https://vapi.daily.co/k9sdJIS5DptGpViBUPLy"
+                },
+                "webCallUrl": "https://vapi.daily.co/k9sdJIS5DptGpViBUPLy",
+                "status": "queued",
+                "assistantId": "ee8d1296-3f20-488b-b630-1ca649a3844c",
+                "assistantVersion": "v6",
+                "assistantOverrides": {
+                  "clientMessages": [
+                    "transcript",
+                    "hang",
+                    "metadata",
+                    "tool-calls",
+                    "tool-calls-result",
+                    "tool.completed",
+                    "transfer-update",
+                    "user-interrupted",
+                    "status-update",
+                    "assistant.started"
+                  ],
+                  "variableValues": {}
+                }
+              },
+              "assistant": {
+                "id": "ee8d1296-3f20-488b-b630-1ca649a3844c",
+                "orgId": "417b3e25-869c-4e11-b60d-520a10d07142",
+                "name": "UrbanCart Voice Receptionist",
+                "voice": {
+                  "version": "2",
+                  "voiceId": "Clara",
+                  "language": "auto",
+                  "provider": "vapi"
+                },
+                "createdAt": "2026-09-03T10:07:05.490Z",
+                "updatedAt": "2026-09-03T11:11:05.587Z",
+                "model": {
+                  "model": "gpt-4.1-mini",
+                  "toolIds": [
+                    "576ecf53-3dd9-4894-992a-3d921f8ac6cf",
+                    "0b031119-d602-424d-b625-549018be064b"
+                  ],
+                  "messages": [
+                    {
+                      "role": "system",
+                      "content": "You are the UrbanCart Voice Receptionist, an AI phone assistant for UrbanCart, an e-commerce company in Pakistan selling electronics, accessories, home and lifestyle products.\n\nYou are speaking with a live customer on the phone. Keep every response short, natural, and conversational — one or two sentences at a time, the way a helpful human receptionist would talk. Never read out long lists or lengthy paragraphs, and never read a document verbatim — summarize naturally in your own words. Never mention that you are an AI system, a workflow, a webhook, a database, or a \"knowledge base\" — you are UrbanCart's phone assistant, full stop.\n\nYOU HAVE TWO SOURCES OF INFORMATION:\n1. Your attached Knowledge Base — UrbanCart's current product catalog, return policy, shipping policy, warranty information and support guidelines. Use this automatically for any product or policy question.\n2. The \"askUrbanCart\" tool — a live connection to UrbanCart's systems, used only for order status lookups, lead capture, and human escalation (things no static document can answer).\n\nYOUR JOB, IN ORDER OF PRIORITY:\n\n1. PRODUCT & POLICY QUESTIONS\n   Customers will ask about product availability, pricing, delivery areas/timelines, return policy, and warranty. Answer these directly from your Knowledge Base — do not call the \"askUrbanCart\" tool for these. Speak the answer in your own natural, conversational voice; never read it robotically or word-for-word from the document. Never answer from general knowledge or guess if the Knowledge Base doesn't cover it — UrbanCart's policies change, and a wrong answer could cost the company money or a customer's trust. If the Knowledge Base doesn't have the answer, tell the customer honestly that you're not certain and a team member will confirm — do not guess, and do not call the tool as a fallback for this.\n\n2. ORDER STATUS\n   If the customer mentions an order number (formatted like \"UC-\" followed by digits, e.g. UC-10452) or asks \"where is my order,\" ask them to confirm the order number if you don't have it clearly, then call \"askUrbanCart\" with their question including that order number — order status is live data, never in the Knowledge Base. Relay the status, items, and expected delivery date in a natural sentence. If no matching order is found, apologize, say you couldn't locate it, and offer to connect them with support.\n\n3. SALES LEADS\n   If the customer expresses interest in buying something — asks for a quote, says they want to purchase, or starts describing a product they want — have a natural conversation to collect: their name, phone number (confirm the number you're calling from, or ask for a callback number), the product they're interested in, their approximate budget, their location/city, and whether they're ready to buy now or still comparing options. You can use the Knowledge Base to answer any product questions that come up along the way. Once you have enough lead details, call \"askUrbanCart\" summarizing the lead in a clear sentence (e.g. \"Customer named Ali Raza wants the iPhone 15, budget around 200,000 rupees, based in Lahore, ready to buy\"). Let our system route the notification — you do not need to tell the customer anything about Slack or internal notifications. Simply confirm to the customer that their information has been passed to the sales team and someone will follow up.\n\n4. COMPLAINTS & ESCALATIONS\n   If the customer reports a damaged or defective product, a complicated or disputed refund, sounds frustrated or angry, or explicitly asks to speak with a human — do not try to resolve it yourself, and do not try to answer it from the Knowledge Base even if it sounds like a return/warranty question. Acknowledge the issue with empathy in one sentence, then call \"askUrbanCart\" describing the complaint clearly (what happened, and that this needs a human). Tell the customer a member of the support team will follow up with them shortly, normally within the same business day. Stay calm and empathetic regardless of the customer's tone.\n\n5. ANYTHING UNCLEAR\n   If you can't understand what the customer wants after one clarifying question, offer to connect them with a team member rather than guessing.\n\nRULES YOU MUST FOLLOW:\n- Use the Knowledge Base directly for product and policy questions. Use the \"askUrbanCart\" tool only for order status, lead capture, and escalation — never call it for something the Knowledge Base already covers, and never answer an order/lead/escalation situation without calling it.\n- Never fabricate a return window, warranty period, price, or delivery estimate. Only state what the Knowledge Base or the tool actually returned.\n- If the Knowledge Base and the tool ever seem to disagree on something, trust the tool's live answer for anything account/order-specific, and say you'll have a team member confirm exact policy wording if it matters.\n- Never argue with or interrupt the customer. Let them finish speaking.\n- Keep your tone warm, professional, and efficient — this is a business phone line, not a chatty conversation.\n- If asked something completely unrelated to UrbanCart (weather, general trivia, etc.), politely redirect: \"I'm only able to help with UrbanCart questions — is there anything about your order or our products I can help with?\"\n- Never read out internal system details, database fields, ticket IDs, document filenames, or technical error messages to the customer. Translate everything into plain, friendly language.\n- If the tool call fails or times out, apologize once, say you're having a technical issue, and offer to have someone call them back — do not repeat the tool call more than twice.\n\nEND OF CALL:\nWhen the customer indicates they're done (says goodbye, \"that's all,\" \"thanks, bye,\" etc.), thank them for calling UrbanCart and end the call politely. Do not keep the conversation going after they've signaled they're finished.\n```"
+                    }
+                  ],
+                  "provider": "openai",
+                  "knowledgeBase": {
+                    "fileIds": [
+                      "0140aef7-db7a-4e0f-9f62-a75c5e65cd44",
+                      "1716ea3a-735b-410b-994d-321556917b86",
+                      "19a0b586-cc95-4f5a-bf0d-7104ea60b1d1",
+                      "d9eb8b34-2038-4575-93b9-ee8d3fd2707d",
+                      "2fcba604-57bb-4a9a-9409-d52cd37c8c21"
+                    ],
+                    "provider": "google"
+                  },
+                  "tools": [
+                    {
+                      "id": "576ecf53-3dd9-4894-992a-3d921f8ac6cf",
+                      "createdAt": "2026-09-03T10:07:30.540Z",
+                      "updatedAt": "2026-09-03T15:40:20.422Z",
+                      "type": "function",
+                      "function": {
+                        "name": "askUrbanCart",
+                        "strict": true,
+                        "parameters": {
+                          "type": "object",
+                          "required": [
+                            "message_text"
+                          ],
+                          "properties": {
+                            "message_text": {
+                              "type": "string",
+                              "description": "The customer's question or statement, or your own summary of a lead/complaint, in plain natural language."
+                            }
+                          }
+                        },
+                        "description": "Send the customer's question, order lookup, lead details, or complaint to UrbanCart's backend and get back what to say next. Always call this before answering any product, policy, order-status, lead, or complaint question."
+                      },
+                      "messages": [
+                        {
+                          "type": "request-start",
+                          "blocking": false
+                        }
+                      ],
+                      "orgId": "417b3e25-869c-4e11-b60d-520a10d07142",
+                      "server": {
+                        "url": "https://tehminafatima.app.n8n.cloud/webhook-test/urbancart/vapi-webhook",
+                        "timeoutSeconds": 20,
+                        "staticIpAddressesEnabled": false
+                      },
+                      "async": false,
+                      "variableExtractionPlan": {
+                        "schema": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {}
+                        }
+                      },
+                      "latestVersion": "v4"
+                    },
+                    {
+                      "id": "0b031119-d602-424d-b625-549018be064b",
+                      "createdAt": "2026-09-03T10:08:07.038Z",
+                      "updatedAt": "2026-09-03T10:08:07.038Z",
+                      "type": "endCall",
+                      "function": {
+                        "name": "end_urbancart_call",
+                        "strict": true,
+                        "parameters": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {}
+                        },
+                        "description": "Politely end the call after the customer indicates they are finished or says goodbye."
+                      },
+                      "orgId": "417b3e25-869c-4e11-b60d-520a10d07142",
+                      "latestVersion": "v1"
+                    }
+                  ]
+                },
+                "firstMessage": "Thanks for calling UrbanCart! I'm your virtual assistant — I can help with product questions, delivery and returns, check an existing order, or connect you with our sales or support team. How can I help you today?",
+                "transcriber": {
+                  "model": "stt-rt-v5",
+                  "provider": "soniox",
+                  "fallbackPlan": {
+                    "autoFallback": {
+                      "enabled": true
+                    }
+                  }
+                },
+                "silenceTimeoutSeconds": 10,
+                "clientMessages": [
+                  "transcript",
+                  "hang",
+                  "metadata",
+                  "tool-calls",
+                  "tool-calls-result",
+                  "tool.completed",
+                  "transfer-update",
+                  "user-interrupted",
+                  "status-update",
+                  "assistant.started"
+                ],
+                "maxDurationSeconds": 600,
+                "firstMessageMode": "assistant-speaks-first",
+                "analysisPlan": {
+                  "summaryPlan": {
+                    "enabled": false
+                  },
+                  "successEvaluationPlan": {
+                    "enabled": false
+                  }
+                },
+                "server": {
+                  "url": "https://tehminafatima.app.n8n.cloud/webhook/urbancart/vapi-webhook",
+                  "timeoutSeconds": 20
+                },
+                "latestVersion": "v6"
+              },
+              "assistantVersion": "v6"
+            }
+          },
+          "webhookUrl": "https://tehminafatima.app.n8n.cloud/webhook-test/urbancart/vapi-webhook",
+          "executionMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook - Vapi Tool Call": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Chat & Voice AI Backend": {
+      "main": [
+        [
+          {
+            "node": "Format Vapi Tool Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Vapi Tool Result": {
+      "main": [
+        [
+          {
+            "node": "Respond to Vapi",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Call Chat & Voice AI Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "155a7a7d-6719-4791-b22b-e97a0a77a1d7",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "04d8c36a51c549a53fa9d4d88da7128326f0d2d58610836870a9c6993f1e556a"
+  },
+  "nodeGroups": [],
+  "id": "6KMRQ1FlZvT55sr4",
+  "tags": []
+}

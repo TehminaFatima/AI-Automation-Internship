@@ -1,0 +1,465 @@
+{
+  "name": "UrbanCart - Chat & Voice AI Backend",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "urbancart/chat-inbound",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8cbd7f0a-14fc-4507-8b4d-44fef51f7f77",
+      "name": "Webhook - Chat Message In",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        208
+      ],
+      "webhookId": "50036972-8c09-4cc3-9c81-f3eb2b5c8c18"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO customers (phone, name)\nVALUES ($1, $2)\nON CONFLICT (phone)\nDO UPDATE SET name = COALESCE(customers.name, $2)\nRETURNING id, phone, name;",
+        "options": {
+          "queryReplacement": "={{ $json.body.customer_number }},{{ $json.body.customer_name }}"
+        }
+      },
+      "id": "a57413e4-22c7-4663-84f0-02c0d34a78fe",
+      "name": "Postgres - Upsert Customer",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        224,
+        208
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "cIRwmnm8mjvi189N",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook - Chat Message In').item.json.body.summary_message }}",
+        "options": {
+          "systemMessage": "You are UrbanCart's 24/7 customer assistant on chat and voice. UrbanCart sells electronics, accessories, home and lifestyle products in Pakistan.\n\nRULES:\n1. For any product, price, availability, delivery, return or warranty question, ALWAYS call \"UrbanCart Knowledge Base\" first and answer only from what it returns. If it returns nothing relevant, say you are not sure and a team member will confirm — never invent policy or product details.\n2. For order status questions (customer mentions an order number like UC-10452), call \"Order Status Lookup\". If no matching order is found, say so and offer to connect them with support.\n3. If the customer expresses interest in buying something (mentions wanting to purchase, asks for a quote, or gives budget/location), collect name, phone, product, budget, location and purchase readiness conversationally, then call \"Save Lead\". Only call \"Notify Sales Team (High-Value Lead Only)\" if budget is >= 100000 PKR OR purchase_intent is ready_to_buy — do not notify Slack for casual browsing leads.\n4. If the customer reports a damaged/defective product, a complex refund dispute, or is angry/frustrated, or explicitly asks for a human: call \"Create Escalation Ticket\" AND \"Notify Support Team (Escalation Only)\", then tell the customer a team member will follow up shortly. Do not try to resolve these yourself.\n5. Never notify Slack for routine FAQs or order lookups — keep the team channel free of noise.\n6. Keep responses short and conversational — this assistant serves both text chat and spoken voice calls."
+        }
+      },
+      "id": "69ccbc58-c027-4df3-b653-4b1e28508b59",
+      "name": "UrbanCart AI Assistant",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        928,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "eafa3788-833e-40d0-8cb7-ef6fd3e0f7a2",
+      "name": "OpenAI Model (GPT-4o mini)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        456,
+        440
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Kln5lYccVkVQeszz",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Search UrbanCart product catalog, return policy, shipping policy, warranty info and support guidelines. Always use this before answering any product or policy question. Never answer policy/product questions from general knowledge.",
+        "tableName": {
+          "__rl": true,
+          "value": "document_chunks",
+          "mode": "list",
+          "cachedResultName": "document_chunks"
+        },
+        "topK": 5,
+        "options": {
+          "queryName": "match_doc_chunks"
+        }
+      },
+      "id": "ff04f899-35b9-40cd-9a98-edaa351e92ad",
+      "name": "UrbanCart Knowledge Base",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        584,
+        440
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "denrEdqNXUiX3Aww",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "2812e476-5338-4699-8eeb-5ed27325fc78",
+      "name": "Embeddings OpenAI (KB Search)",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        664,
+        648
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Kln5lYccVkVQeszz",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select order_number, status, delivery_date, items from orders where order_number = $1;",
+        "options": {
+          "queryReplacement": "={{ $fromAI(\"order_number\", \"The UrbanCart order number mentioned by the customer, formatted like UC-10452\", \"string\") }}"
+        }
+      },
+      "id": "a80af620-3f4d-4520-8e9a-16f85135338e",
+      "name": "Order Status Lookup",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.7,
+      "position": [
+        872,
+        440
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "cIRwmnm8mjvi189N",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into leads (customer_id, product_interest, budget, location, purchase_intent, source, status)\nvalues ((select id from customers where phone = $1), $2, $3, $4, $5, 'chat', 'new')\nreturning id;",
+        "options": {
+          "queryReplacement": "={{ $('Postgres - Upsert Customer').item.json.phone }},{{ $fromAI(\"product_interest\", \"Product the customer is interested in\", \"string\") }},{{ $fromAI(\"budget\", \"Approximate budget in PKR, numeric only\", \"number\") }},{{ $fromAI(\"location\", \"Customer city/location\", \"string\") }},{{ $fromAI(\"purchase_intent\", \"One of: ready_to_buy, browsing, comparing\", \"string\") }}"
+        }
+      },
+      "id": "4b9de41d-830d-4070-a1c9-b99ada8b077e",
+      "name": "Save Lead",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.7,
+      "position": [
+        1000,
+        440
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "cIRwmnm8mjvi189N",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BUP44CBEJ",
+          "mode": "list",
+          "cachedResultName": "social"
+        },
+        "text": "={{ $fromAI(\"message\", \"Slack message summarizing the new lead: product, budget, location, intent, phone number\", \"string\") }}",
+        "otherOptions": {}
+      },
+      "id": "b36ad284-aa90-4709-993b-b609904f4afc",
+      "name": "Notify Sales Team (High-Value Lead Only)",
+      "type": "n8n-nodes-base.slackTool",
+      "typeVersion": 2.7,
+      "position": [
+        1128,
+        440
+      ],
+      "webhookId": "e00c26d2-3781-4fdd-94a5-cf82f388b423",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "iTHnOtI0GFei3K1M",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into tickets (customer_id, type, priority, status)\nvalues ((select id from customers where phone = $1), $2, 'high', 'open')\nreturning id;",
+        "options": {
+          "queryReplacement": "={{ $('Postgres - Upsert Customer').item.json.phone }},{{ $fromAI(\"ticket_type\", \"One of: damaged_item, refund_dispute, angry_customer, other_complaint\", \"string\") }}"
+        }
+      },
+      "id": "52f99969-c052-4940-98c0-06cef69906b5",
+      "name": "Create Escalation Ticket",
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.7,
+      "position": [
+        1256,
+        440
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "cIRwmnm8mjvi189N",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "support-escalations"
+        },
+        "text": "={{ $fromAI(\"message\", \"Slack alert summarizing the complaint/escalation and why a human is needed\", \"string\") }}",
+        "otherOptions": {}
+      },
+      "id": "6b247cba-544f-447b-8650-40331e08270b",
+      "name": "Notify Support Team (Escalation Only)",
+      "type": "n8n-nodes-base.slackTool",
+      "typeVersion": 2.7,
+      "position": [
+        1384,
+        440
+      ],
+      "webhookId": "6a7f4090-5923-490c-b36a-5f16c338cb97",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "iTHnOtI0GFei3K1M",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into conversations (customer_id, channel, transcript, intent, sentiment, escalated)\nvalues ((select id from customers where phone = $1), 'chat', $2, 'handled_by_agent', 'neutral', false);",
+        "options": {
+          "queryReplacement": "={{ $('Postgres - Upsert Customer').item.json.phone }},{{ $('Webhook - Chat Message In').item.json.body.message_text }} => {{ $json.output }}"
+        }
+      },
+      "id": "4e12cfdd-7ead-441f-92e2-ca6c66b7df7d",
+      "name": "Postgres - Log Conversation",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1584,
+        208
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "cIRwmnm8mjvi189N",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"reply\": $('UrbanCart AI Assistant').item.json.output } }}",
+        "options": {}
+      },
+      "id": "6ea95f44-f534-4573-a5be-2ae766320279",
+      "name": "Respond to Chat Channel",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1808,
+        208
+      ]
+    }
+  ],
+  "pinData": {
+    "Postgres - Upsert Customer": [
+      {
+        "json": {
+          "id": "1891dc16-9e30-45f9-82ee-b4e351a46b27",
+          "phone": "03701360540",
+          "name": "Sara Khan"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook - Chat Message In": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Upsert Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Upsert Customer": {
+      "main": [
+        [
+          {
+            "node": "UrbanCart AI Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UrbanCart AI Assistant": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Log Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model (GPT-4o mini)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "UrbanCart AI Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UrbanCart Knowledge Base": {
+      "ai_tool": [
+        [
+          {
+            "node": "UrbanCart AI Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI (KB Search)": {
+      "ai_embedding": [
+        [
+          {
+            "node": "UrbanCart Knowledge Base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Status Lookup": {
+      "ai_tool": [
+        [
+          {
+            "node": "UrbanCart AI Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "UrbanCart AI Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Sales Team (High-Value Lead Only)": {
+      "ai_tool": [
+        [
+          {
+            "node": "UrbanCart AI Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Escalation Ticket": {
+      "ai_tool": [
+        [
+          {
+            "node": "UrbanCart AI Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Support Team (Escalation Only)": {
+      "ai_tool": [
+        [
+          {
+            "node": "UrbanCart AI Assistant",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres - Log Conversation": {
+      "main": [
+        [
+          {
+            "node": "Respond to Chat Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "9da0c6c6-efde-4966-a37b-4ad8e4ada5a6",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "04d8c36a51c549a53fa9d4d88da7128326f0d2d58610836870a9c6993f1e556a"
+  },
+  "nodeGroups": [],
+  "id": "ilRly5L6WshJusEW",
+  "tags": []
+}

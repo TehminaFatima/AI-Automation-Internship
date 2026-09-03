@@ -1,0 +1,334 @@
+{
+  "name": "UrbanCart - Document Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive",
+            "__rl": true
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "17PrI1tmIuDOXvzH__ONjS8QSZeqC2mpG",
+            "mode": "list",
+            "cachedResultName": "UrbanCart Knowledge Base",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/17PrI1tmIuDOXvzH__ONjS8QSZeqC2mpG"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        -32
+      ],
+      "id": "3f66d893-1fed-441c-8f97-73b6766b4298",
+      "name": "Search files and folders",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AL1R1MBHvZZjiqMn",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "=",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          },
+          "whatToSearch": "all"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        -32
+      ],
+      "id": "00bee391-bd9a-499f-b13b-4778c3fc1767",
+      "name": "Search files and folders1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AL1R1MBHvZZjiqMn",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1552,
+        -32
+      ],
+      "id": "92d939f6-80f6-4eef-b789-e8e0013848fe",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "AL1R1MBHvZZjiqMn",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "471858e6-8018-481c-90f0-ef317c6611fc",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1792,
+        208
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "Kln5lYccVkVQeszz",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "source_file",
+                "value": "={{ $('Search files and folders1').item.json.name }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "4bd48e6b-07c0-4a18-bac7-0d2cc0fd18a2",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "document_chunks",
+          "mode": "list",
+          "cachedResultName": "document_chunks"
+        },
+        "embeddingBatchSize": 50,
+        "options": {
+          "queryName": "match_doc_chunks"
+        }
+      },
+      "id": "1eb0815a-f783-42a6-b0ce-be7da35238de",
+      "name": "Supabase Vector Store - Insert Chunks",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1776,
+        -32
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "denrEdqNXUiX3Aww",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into documents (filename, drive_id, last_ingested_at)\nvalues ($1, $2, now())\non conflict (drive_id) do update set filename = $1, last_ingested_at = now();",
+        "options": {
+          "queryReplacement": "={{ $('Search files and folders1').item.json.name }},={{ $('Search files and folders1').item.json.id }}"
+        }
+      },
+      "id": "b963760a-2c41-4890-a853-3504ed0cddab",
+      "name": "Postgres - Mark Document Ingested",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        2128,
+        -128
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "cIRwmnm8mjvi189N",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BUP44CBEJ",
+          "mode": "list",
+          "cachedResultName": "social"
+        },
+        "text": "=:warning: RAG ingestion failed for document *{{ $('Search files and folders1').item.json.name }}* (Drive ID: {{ $('Search files and folders1').item.json.id }}). Error: {{ $json.error?.message || 'see execution log' }}",
+        "otherOptions": {}
+      },
+      "id": "d18fb65d-7c9d-40b0-93fb-d35f78fad56f",
+      "name": "Slack - Ops Alert (Ingestion Failed)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2128,
+        64
+      ],
+      "webhookId": "856ad755-5789-48e8-af9a-67a650c1d977",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "iTHnOtI0GFei3K1M",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "20fa87ad-22da-47e5-be35-2c670259fcc2",
+      "name": "Manual Trigger - Run Ingestion",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -32
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders1": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store - Insert Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store - Insert Chunks",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store - Insert Chunks",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store - Insert Chunks": {
+      "main": [
+        [
+          {
+            "node": "Postgres - Mark Document Ingested",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack - Ops Alert (Ingestion Failed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger - Run Ingestion": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "845c3c49-db3d-4466-8512-065e102d50a6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "04d8c36a51c549a53fa9d4d88da7128326f0d2d58610836870a9c6993f1e556a"
+  },
+  "nodeGroups": [],
+  "id": "kGZ861ctNdu0VbMM",
+  "tags": []
+}
