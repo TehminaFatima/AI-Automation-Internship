@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A knowledge-powered UrbanCart customer assistant.">
+  <title>UrbanCart AI Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="chat-panel" aria-label="AI Assistant chat">
+      <header class="chat-header">
+        <div class="brand-icon" aria-hidden="true">✦</div>
+        <div class="agent-meta"><strong>AI Assistant</strong><span>Knowledge-powered assistant</span></div>
+        <div class="header-actions"><span class="online-status"><i></i> Online</span><button class="new-chat-button" id="resetChat" type="button"><span>＋</span> New Chat</button></div>
+      </header>
+      <div class="message-list" id="messageList" aria-live="polite" aria-relevant="additions"></div>
+      <form class="composer" id="chatForm">
+        <label class="sr-only" for="messageInput">Your message</label>
+        <textarea id="messageInput" rows="1" placeholder="Ask me anything..." maxlength="1200" required></textarea>
+        <button class="send-button" id="sendButton" type="submit" aria-label="Send message" title="Send message"><span>Send</span><b>↑</b></button>
+        <div class="composer-foot"><span>Enter to send <b>·</b> Shift + Enter for new line</span><span id="characterCount">0 / 1200</span></div>
+      </form>
+    </section>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
